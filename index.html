@@ -533,23 +533,21 @@ function snapshotDetalle(){
 }
 
 // ── Datos ─────────────────────────────────────────────────────────────────
-// Arranca vacío para que cada uno complete sus propias categorías con
-// "+ Nueva Categoría MXN/USD". Como referencia, así se ven cargadas en
-// PC Capital (mismo formato: c=nombre, p=plataforma, l=liquidez, v=monto):
-//
-// let portafolioMXN = [
-//     {c:"Cash",p:"Home",l:"Inmediata",v:0},{c:"Mexico Account",p:"Citibanamex",l:"Inmediata",v:0},
-//     {c:"Fondo Citibanamex",p:"Citibanamex",l:"24 hs",v:0},{c:"Cetes",p:"Cetes Directos",l:"Inmediata",v:0},
-//     {c:"Fondo de ahorro",p:"Banorte",l:"Annual",v:0},{c:"Plan de pension",p:"Banorte",l:"Retirement",v:0},
-//     {c:"Acciones GBM",p:"GBM",l:"Inmediata",v:0},{c:"Infonavit",p:"Infonavit",l:"Retirement",v:0}
-// ];
-// let portafolioUSD = [
-//     {c:"Cash",p:"Home",l:"Inmediata",v:0},{c:"US Account",p:"Wells Fargo",l:"Inmediata",v:0},
-//     {c:"US Saving + CD",p:"Wells Fargo",l:"Inmediata",v:0},{c:"Acciones",p:"Fidelity",l:"Inmediata",v:0},
-//     {c:"Criptomonedas",p:"Coinbase",l:"Inmediata",v:0}
-// ];
-let portafolioMXN = [];
-let portafolioUSD = [];
+// Precargado con las mismas categorías de PC Capital, como ejemplo/plantilla,
+// pero todo en $0 — solo hay que completar los montos (o editar/borrar las
+// que no apliquen con ✕, o agregar nuevas con "+ Nueva Categoría").
+let portafolioMXN = [
+    {c:"Cash",p:"Home",l:"Inmediata",v:0},{c:"Mexico Account",p:"Citibanamex",l:"Inmediata",v:0},{c:"Ahorro Fácil",p:"Citibanamex",l:"Inmediata",v:0},
+    {c:"Fondo Citibanamex",p:"Citibanamex",l:"24 hs",v:0},{c:"Cetes",p:"Cetes Directos",l:"Inmediata",v:0},{c:"Bonndia",p:"Cetes Directos",l:"Inmediata",v:0},
+    {c:"Fondo de ahorro",p:"Banorte",l:"Annual",v:0},{c:"Plan de pension",p:"Banorte",l:"Retirement",v:0},{c:"Afore retiro",p:"Citibanamex",l:"Retirement",v:0},
+    {c:"Acciones GBM",p:"GBM",l:"Inmediata",v:0},{c:"Infonavit",p:"Infonavit",l:"Retirement",v:0}
+];
+let portafolioUSD = [
+    {c:"Cash Mex",p:"Home",l:"Inmediata",v:0},{c:"Cash Arg",p:"Home",l:"Inmediata",v:0},{c:"Argentina Account",p:"Santander",l:"Inmediata",v:0},
+    {c:"US Account",p:"Wells Fargo",l:"Inmediata",v:0},{c:"US Saving + CD",p:"Wells Fargo",l:"Inmediata",v:0},{c:"Acciones Nike",p:"Fidelity",l:"Inmediata",v:0},
+    {c:"Criptomonedas",p:"Coinbase",l:"Inmediata",v:0},{c:"Opciones Nike",p:"Fidelity",l:"Retirement",v:0},{c:"Cash Arg",p:"Caja seguridad",l:"Inmediata",v:0},
+    {c:"Activos Arg",p:"Auto",l:"Inmediata",v:0},{c:"USDc",p:"Dólar App",l:"Inmediata",v:0}
+];
 ensureIds(portafolioMXN); ensureIds(portafolioUSD);
 
 // Sin histórico base todavía: se va a ir armando con "🔒 Cerrar mes" cada mes.
@@ -1408,6 +1406,19 @@ window.onload = function() {
     attachChartTooltip('evolucion-chart','chart-container', () => chartDataMain);
     attachChartTooltip('proyeccion-chart','proyeccion-container', () => chartDataProy);
     window.addEventListener('resize', () => { renderChart(); renderProyeccion(); });
+
+    // ── Guardado inmediato al minimizar/cerrar ──────────────────────────────
+    // planearSincronizacion() espera 800ms antes de guardar (para no escribir
+    // en localStorage con cada tecla). Si cerrás la app o la mandás al fondo
+    // antes de que pase ese tiempo, se perdía el último cambio. Estos eventos
+    // fuerzan el guardado apenas la app deja de estar visible, sin esperar.
+    function forzarGuardadoInmediato() {
+        clearTimeout(timerSincronizacion);
+        sincronizarNube();
+    }
+    document.addEventListener('visibilitychange', () => { if (document.hidden) forzarGuardadoInmediato(); });
+    window.addEventListener('pagehide', forzarGuardadoInmediato);
+    window.addEventListener('blur', forzarGuardadoInmediato);
 };
 </script>
 </body>
