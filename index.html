@@ -704,7 +704,15 @@ function renderChart() {
     const periodEl=document.getElementById('chart-period');
     if (!svg) return;
 
-    if (!historialMensual||historialMensual.length<1) {
+    const frozen = historialMensual.filter(h => h.mes < mesActual()).slice(-17);
+    const liveTotal = totalActualUSD();
+    const livePoint = { mes: mesActual(), total: liveTotal, live: true };
+    const data = [...frozen, livePoint];
+
+    // Se muestra apenas haya algo que graficar: un mes congelado, o un total
+    // en vivo mayor a cero (así el gráfico arranca desde el primer dato que
+    // cargues, sin esperar a que "cierres" el mes con 🔒).
+    if (data.every(d => !d.total || d.total<=0)) {
         svg.style.display='none'; empty.style.display='block';
         lastValEl.innerText='—'; chgEl.innerText='—'; chgEl.className='chart-chg neu';
         periodEl.innerText='Sin datos aún';
@@ -712,10 +720,6 @@ function renderChart() {
     }
     empty.style.display='none'; svg.style.display='block';
 
-    const frozen = historialMensual.filter(h => h.mes < mesActual()).slice(-17);
-    const liveTotal = totalActualUSD();
-    const livePoint = { mes: mesActual(), total: liveTotal, live: true };
-    const data = [...frozen, livePoint];
     const N = data.length;
     const first = data[0].total, last = data[N-1].total;
     const diff = last - first, diffPct = first > 0 ? (diff/first*100) : 0;
